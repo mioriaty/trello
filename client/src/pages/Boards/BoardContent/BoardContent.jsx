@@ -3,24 +3,19 @@ import ListColumns from './ListColumns/ListColumns'
 
 import {
   DndContext,
-  // PointerSensor,
-  // MouseSensor,
-  // TouchSensor,
-  useSensor,
-  useSensors,
   DragOverlay,
-  defaultDropAnimationSideEffects,
   closestCorners,
-  // closestCenter,
+  defaultDropAnimationSideEffects,
+  getFirstCollision,
   pointerWithin,
-  // rectIntersection,
-  getFirstCollision
+  useSensor,
+  useSensors
 } from '@dnd-kit/core'
 import { MouseSensor, TouchSensor } from '~/customLibraries/DndKitSensors'
 
 import { arrayMove } from '@dnd-kit/sortable'
-import { useEffect, useState, useCallback, useRef } from 'react'
 import { cloneDeep, isEmpty } from 'lodash'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { generatePlaceholderCard } from '~/utils/formatters'
 
 import Column from './ListColumns/Column/Column'
@@ -33,12 +28,9 @@ const ACTIVE_DRAG_ITEM_TYPE = {
 
 function BoardContent({
   board,
-  createNewColumn,
-  createNewCard,
   moveColumns,
   moveCardInTheSameColumn,
-  moveCardToDifferentColumn,
-  deleteColumnDetails
+  moveCardToDifferentColumn
 }) {
   // https://docs.dndkit.com/api-documentation/sensors
   // Nếu dùng PointerSensor mặc định thì phải kết hợp thuộc tính CSS touch-action: none ở những phần tử kéo thả - nhưng mà còn bug
@@ -340,10 +332,6 @@ function BoardContent({
     //  - Kéo một cái card có image cover lớn và kéo lên phía trên cùng ra khỏi khu vực kéo thả
     if (!pointerIntersections?.length) return
 
-    // // Thuật toán phát hiện va chạm sẽ trả về một mảng các va chạm ở đây (không cần bước này nữa - video 37.1)
-    // const intersections = !!pointerIntersections?.length
-    //   ? pointerIntersections
-    //   : rectIntersection(args)
 
     // Tìm overId đầu tiên trong đám pointerIntersections ở trên
     let overId = getFirstCollision(pointerIntersections, 'id')
@@ -393,12 +381,7 @@ function BoardContent({
         height: (theme) => theme.trello.boardContentHeight,
         p: '10px 0'
       }}>
-        <ListColumns
-          columns={orderedColumns}
-          createNewColumn={createNewColumn}
-          createNewCard={createNewCard}
-          deleteColumnDetails={deleteColumnDetails}
-        />
+        <ListColumns columns={orderedColumns} />
         <DragOverlay dropAnimation={customDropAnimation}>
           {!activeDragItemType && null}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) && <Column column={activeDragItemData} />}

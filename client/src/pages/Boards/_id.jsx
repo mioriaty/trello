@@ -8,21 +8,15 @@ import BoardContent from './BoardContent/BoardContent'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
+import { cloneDeep } from 'lodash'
 import { useDispatch, useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
 import {
-  createNewCardAPI,
-  // fetchBoardDetailsAPI,
-  createNewColumnAPI,
-  deleteColumnDetailsAPI,
   moveCardToDifferentColumnAPI,
   updateBoardDetailsAPI,
   updateColumnDetailsAPI
 } from '~/apis'
-import { fetchBoardDetailsAPI, updateCurrentActiveBoard } from '~/redux/activeBoard/activeBoard.actions'
-import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoard.slice'
-import { generatePlaceholderCard } from '~/utils/formatters'
-import { cloneDeep } from 'lodash'
+import { fetchBoardDetailsAPI } from '~/redux/activeBoard/activeBoard.actions'
+import { selectCurrentActiveBoard, updateCurrentActiveBoard } from '~/redux/activeBoard/activeBoard.slice'
 
 function Board() {
 
@@ -35,56 +29,6 @@ function Board() {
     dispatch(fetchBoardDetailsAPI(boardId))
   }, [dispatch])
 
-  // Func này có nhiệm vụ gọi API tạo mới Column và làm lại dữ liệu State Board
-  const createNewColumn = async (newColumnData) => {
-    const createdColumn = await createNewColumnAPI({
-      ...newColumnData,
-      boardId: currentActiveBoard._id
-    })
-
-    // Khi tạo column mới thì nó sẽ chưa có card, cần xử lý vấn đề kéo thả vào một column rỗng (Nhớ lại video 37.2, code hiện tại là video 69)
-    createdColumn.cards = [generatePlaceholderCard(createdColumn)]
-    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id]
-
-    // Cập nhật state board
-    // Phía Front-end chúng ta phải tự làm đúng lại state data board (thay vì phải gọi lại api fetchBoardDetailsAPI)
-    // Lưu ý: cách làm này phụ thuộc vào tùy lựa chọn và đặc thù dự án, có nơi thì BE sẽ hỗ trợ trả về luôn toàn bộ Board dù đây có là api tạo Column hay Card đi chăng nữa. => Lúc này FE sẽ nhàn hơn.
-
-    /*
-      Đoạn này sẽ dính lỗi object is not extensible bởi dù đã copy/clone ra giá trị newBoard nhưng bản chất của spread operator là Shallow Copy/Clone, nên dính phải rule Immutability trong Redux Toolkit không dùng được hàm push (sửa giá trị mảng trực tiếp), cách đơn giản nhất ở trường hợp này của chúng ta là dùng chơi Deep Copy/Clone toàn bộ cái Board
-    */
-
-    const newBoard = cloneDeep(currentActiveBoard)
-    newBoard.columns.push(createdColumn)
-    newBoard.columnOrderIds.push(createdColumn._id)
-    dispatch(updateCurrentActiveBoard(newBoard))
-  }
-
-  // Func này có nhiệm vụ gọi API tạo mới Card và làm lại dữ liệu State Board
-  const createNewCard = async (newCardData) => {
-    const createdCard = await createNewCardAPI({
-      ...newCardData,
-      boardId: currentActiveBoard._id
-    })
-
-    // Cập nhật state board
-    // Phía Front-end chúng ta phải tự làm đúng lại state data board (thay vì phải gọi lại api fetchBoardDetailsAPI)
-    // Lưu ý: cách làm này phụ thuộc vào tùy lựa chọn và đặc thù dự án, có nơi thì BE sẽ hỗ trợ trả về luôn toàn bộ Board dù đây có là api tạo Column hay Card đi chăng nữa. => Lúc này FE sẽ nhàn hơn.
-    const newBoard = cloneDeep(currentActiveBoard)
-    const columnToUpdate = newBoard.columns.find(column => column._id === createdCard.columnId)
-    if (columnToUpdate) {
-      // Nếu column rỗng: bản chất là đang chứa một cái Placeholder card (Nhớ lại video 37.2, hiện tại là video 69)
-      if (columnToUpdate.cards.some(card => card.FE_PlaceholderCard)) {
-        columnToUpdate.cards = [createdCard]
-        columnToUpdate.cardOrderIds = [createdCard._id]
-      } else {
-        // Ngược lại Column đã có data thì push vào cuối mảng
-        columnToUpdate.cards.push(createdCard)
-        columnToUpdate.cardOrderIds.push(createdCard._id)
-      }
-    }
-    dispatch(updateCurrentActiveBoard(newBoard))
-  }
 
   /**
    * Func này có nhiệm vụ gọi API và xử lý khi kéo thả Column xong xuôi
@@ -149,20 +93,6 @@ function Board() {
     })
   }
 
-  // Xử lý xóa một Column và Cards bên trong nó
-  const deleteColumnDetails = (columnId) => {
-    // Update cho chuẩn dữ liệu state Board
-    const newBoard = { ...currentActiveBoard }
-    // filter trả về mảng mới, không ảnh hưởng đến mảng cũ, ko cần dùng cloneDeep
-    newBoard.columns = newBoard.columns.filter(c => c._id !== columnId)
-    newBoard.columnOrderIds = newBoard.columnOrderIds.filter(_id => _id !== columnId)
-    dispatch(updateCurrentActiveBoard(newBoard))
-
-    // Gọi API xử lý phía BE
-    deleteColumnDetailsAPI(columnId).then(res => {
-      toast.success(res?.deleteResult)
-    })
-  }
 
   if (!currentActiveBoard) {
     return (
@@ -186,10 +116,6 @@ function Board() {
       <BoardBar board={currentActiveBoard} />
       <BoardContent
         board={currentActiveBoard}
-
-        createNewColumn={createNewColumn}
-        createNewCard={createNewCard}
-        deleteColumnDetails={deleteColumnDetails}
 
         moveColumns={moveColumns}
         moveCardInTheSameColumn={moveCardInTheSameColumn}

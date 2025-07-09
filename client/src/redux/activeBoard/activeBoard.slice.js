@@ -41,6 +41,9 @@ export const activeBoardSlice = createSlice({
 })
 
 
+export const { updateCurrentActiveBoard } = activeBoardSlice.actions
+
+
 export const selectCurrentActiveBoard = (state) => {
   return state.activeBoard.currentActiveBoard
 }
