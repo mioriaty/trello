@@ -4,6 +4,7 @@ import AppBar from '~/components/AppBar/AppBar'
 import BoardBar from './BoardBar/BoardBar'
 import BoardContent from './BoardContent/BoardContent'
 
+
 // import { mockData } from '~/apis/mock-data'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -17,17 +18,17 @@ import {
 } from '~/apis'
 import { fetchBoardDetailsAPI } from '~/redux/activeBoard/activeBoard.actions'
 import { selectCurrentActiveBoard, updateCurrentActiveBoard } from '~/redux/activeBoard/activeBoard.slice'
+import { useParams } from 'react-router-dom'
 
 function Board() {
+  const { boardId } = useParams()
 
   const currentActiveBoard = useSelector(selectCurrentActiveBoard)
   const dispatch = useDispatch()
 
-
   useEffect(() => {
-    const boardId = '686d242617f4615325496a61'
     dispatch(fetchBoardDetailsAPI(boardId))
-  }, [dispatch])
+  }, [dispatch, boardId])
 
 
   /**
