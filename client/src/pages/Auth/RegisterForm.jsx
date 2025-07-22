@@ -13,13 +13,24 @@ import Zoom from '@mui/material/Zoom'
 import { useForm } from 'react-hook-form'
 import { EMAIL_RULE, EMAIL_RULE_MESSAGE, FIELD_REQUIRED_MESSAGE, PASSWORD_CONFIRMATION_MESSAGE, PASSWORD_RULE, PASSWORD_RULE_MESSAGE } from '~/utils/validators'
 import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
+import { registerUserAPI } from '~/apis'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 function RegisterForm() {
-  const { register, handleSubmit, formState: { errors }, getValues, watch } = useForm()
+  const { register, handleSubmit, formState: { errors, isLoading }, watch } = useForm()
+  const navigate = useNavigate()
 
   const submitRegister = (data) => {
-    console.log(data)
+    const { email, password } = data
+    toast
+      .promise(registerUserAPI({ email, password }), {
+        pending: 'Registering account...'
+      }).then((user) => {
+        navigate(`/login?verifiedEmail=${user.email}`)
+      })
   }
+
   return (
     <form onSubmit={handleSubmit(submitRegister)}>
 
@@ -98,6 +109,7 @@ function RegisterForm() {
               size="large"
               fullWidth
               className="interceptor-loading"
+              disabled={isLoading}
             >
               Register
             </Button>

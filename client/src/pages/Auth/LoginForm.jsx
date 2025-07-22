@@ -1,26 +1,47 @@
 
-import { Link } from 'react-router-dom'
+import LockIcon from '@mui/icons-material/Lock'
+import { Card as MuiCard } from '@mui/material'
+import Alert from '@mui/material/Alert'
+import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Avatar from '@mui/material/Avatar'
-import LockIcon from '@mui/icons-material/Lock'
-import Typography from '@mui/material/Typography'
-import { Card as MuiCard } from '@mui/material'
-import { ReactComponent as TrelloIcon } from '~/assets/trello.svg'
 import CardActions from '@mui/material/CardActions'
 import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 import Zoom from '@mui/material/Zoom'
-import Alert from '@mui/material/Alert'
 import { useForm } from 'react-hook-form'
-import { EMAIL_RULE, PASSWORD_RULE, FIELD_REQUIRED_MESSAGE, PASSWORD_RULE_MESSAGE, EMAIL_RULE_MESSAGE } from '~/utils/validators'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { ReactComponent as TrelloIcon } from '~/assets/trello.svg'
 import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
+import { loginUserAPI } from '~/redux/user/user.slice'
+import { EMAIL_RULE, EMAIL_RULE_MESSAGE, FIELD_REQUIRED_MESSAGE, PASSWORD_RULE, PASSWORD_RULE_MESSAGE } from '~/utils/validators'
 
 
 function LoginForm() {
   const { register, handleSubmit, formState: { errors } } = useForm()
+  let [searchParams] = useSearchParams()
+  const registeredEmail = searchParams.get('registeredEmail')
+  const verifiedEmail = searchParams.get('verifiedEmail')
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
 
   const submitLogIn = (data) => {
-    console.log(data)
+    const { email, password } = data
+    toast.promise(
+      dispatch(loginUserAPI({ email, password })),
+      {
+        pending: 'Logging in...'
+      }
+    ).then((res) => {
+      console.log(res)
+      if (!res.error) {
+        navigate('/')
+      }
+    })
   }
 
   return (
@@ -40,18 +61,22 @@ function LoginForm() {
           <Box sx={{ marginTop: '1em', display: 'flex', justifyContent: 'center', color: theme => theme.palette.grey[500] }}>
             Author: Mioriaty
           </Box>
-          {/* <Box sx={{ marginTop: '1em', display: 'flex', justifyContent: 'center', flexDirection: 'column', padding: '0 1em' }}>
-            <Alert severity="success" sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}>
-              Your email&nbsp;
-              <Typography variant="span" sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}>trungquandev@gmail.com</Typography>
-              &nbsp;has been verified.<br />Now you can login to enjoy our services! Have a good day!
-            </Alert>
-            <Alert severity="info" sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}>
-              An email has been sent to&nbsp;
-              <Typography variant="span" sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}>trungquandev@gmail.com</Typography>
-              <br />Please check and verify your account before logging in!
-            </Alert>
-          </Box> */}
+          <Box sx={{ marginTop: '1em', display: 'flex', justifyContent: 'center', flexDirection: 'column', padding: '0 1em' }}>
+            {verifiedEmail &&
+              (<Alert severity="success" sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}>
+                Your email&nbsp;
+                <Typography variant="span" sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}>{verifiedEmail}</Typography>
+                &nbsp;has been verified.<br />Now you can login to enjoy our services! Have a good day!
+              </Alert>)
+            }
+            {registeredEmail &&
+              (<Alert severity="info" sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}>
+                An email has been sent to&nbsp;
+                <Typography variant="span" sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}>{registeredEmail}</Typography>
+                <br />Please check and verify your account before logging in!
+              </Alert>)
+            }
+          </Box>
           <Box sx={{ padding: '0 1em 1em 1em' }}>
             <Box sx={{ marginTop: '1em' }}>
               <TextField

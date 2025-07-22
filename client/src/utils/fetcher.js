@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { interceptorLoadingElements } from './formatters'
-
+import { refreshTokenAPI } from '~/apis'
+import { logoutUserAPI } from '~/redux/user/user.slice'
 
 // Khởi tạo instance của axios
 let fetcher = axios.create()
